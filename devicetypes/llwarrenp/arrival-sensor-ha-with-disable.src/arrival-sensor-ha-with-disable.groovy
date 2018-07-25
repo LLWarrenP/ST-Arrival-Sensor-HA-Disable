@@ -1,7 +1,10 @@
 import groovy.json.JsonOutput
 
 /**
- *  Copyright 2017 SmartThings
+ *
+ * Arrival Sensor HA with Disable
+ *
+ *  Copyright 2018 Warren Poschman
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -13,6 +16,17 @@ import groovy.json.JsonOutput
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ 
+def dthVersion() {
+	return "0.1"
+}
+
+/*
+* Change Log:
+* 2018-7-24  - (0.1) Debug release
+*/
+
+
 metadata {
     definition (name: "Arrival Sensor HA with Disable", namespace: "LLWarrenP", author: "LLWarrenP") {
         capability "Tone"
