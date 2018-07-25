@@ -23,14 +23,14 @@ The Device Handler is installed as a custom device handler via the SmartThings I
 6. Enter "ST-Arrival-Sensor-HA-Disable" as the repository
 7. Hit "Save"
 8. Select "Update from Repo" and select "ST-Arrival-Sensor-HA-Disable"
-9. Select ""
+9. Select "devicetypes/llwarrenp/arrival-sensor-ha-with-disable.src"
 10. Check "Publish" and hit "Execute Update"
 
 ## Manual Installation
 1. Open SmartThings IDE in your web browser and log into your account.
 2. Click on the "My Device Handlers" section in the navigation bar.
 3. On your SmartApps page, click on the "+ Create New Device Handler" button on the right.
-4. On the "New Device Handler" page, Select the Tab "From Code", Copy the "" source code from GitHub and paste it into the IDE editor window.
+4. On the "New Device Handler" page, Select the Tab "From Code", Copy the "arrival-sensor-ha-with-disable.src" source code from GitHub and paste it into the IDE editor window.
 5. Click the blue "Create" button at the bottom of the page. An IDE editor window containing the Device Handler code should now open.
 6. Click the blue "Save" button above the editor window.
 7. Click the "Publish" button next to it and select "For Me". You have now self-published your Device Handler.
