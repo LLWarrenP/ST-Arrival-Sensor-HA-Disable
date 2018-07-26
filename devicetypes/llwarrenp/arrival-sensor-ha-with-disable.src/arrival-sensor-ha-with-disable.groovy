@@ -18,11 +18,12 @@ import groovy.json.JsonOutput
  */
  
 def dthVersion() {
-	return "0.1"
+	return "1.0"
 }
 
 /*
 * Change Log:
+* 2018-7-26  - (1.0) Initial release
 * 2018-7-24  - (0.1) Debug release
 */
 
@@ -68,8 +69,10 @@ metadata {
             state "beep", label:'', action:"tone.beep", icon:"st.secondary.beep", backgroundColor:"#ffffff"
         }
         standardTile("enabled", "device.enabled", width: 1, height: 1) {
-			state "disabled", label:'DISABLED', action:"toggle", icon: "st.sonos.pause-icon", backgroundColor:"#FF0000"
-			state "enabled", label:'ENABLED', action:"toggle", icon: "st.sonos.play-icon", backgroundColor:"#008000"
+			state "disabled-present", label:'DISABLED', action:"toggle", icon: "st.sonos.pause-icon", backgroundColor:"#d64040"
+			state "disabled-not present", label:'DISABLED', action:"toggle", icon: "st.sonos.pause-icon", backgroundColor:"#d64040"
+			state "enabled-present", label:'ENABLED', action:"toggle", icon: "st.sonos.play-icon", backgroundColor:"#64d640"
+			state "enabled-not present", label:'ENABLED', action:"toggle", icon: "st.sonos.play-icon", backgroundColor:"#64d640"
         }
         valueTile("battery", "device.battery", decoration: "flat", inactiveLabel: false) {
             state "battery", label:'${currentValue}% battery', unit:""
@@ -165,16 +168,20 @@ private handlePresenceEvent(present) {
     }
     def linkText = getLinkText(device)
     def descriptionText
+    def enabledStatus = ""
     if ( present )
     	descriptionText = "{{ linkText }} has arrived"
     else
     	descriptionText = "{{ linkText }} has left"
-    if (device.currentValue("enabled") == "disabled") {
+    if ((device.currentValue("enabled") == "disabled-present") || (device.currentValue("enabled") == "disabled-not present")) {
+    	// Device is disabled so we won't generate a presence event but instead just track the status behind the scenes by generating an enabled event
     	log.debug "${linkText} is disabled - not creating presence event"
-        // Can't do this currently
-        //device.currentState("presence").value = present ? "present" : "not present"
-        }
+        enabledStatus = "disabled-"
+        enabledStatus = enabledStatus.concat(present ? "present" : "not present")
+		sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
+	}
     else {
+    	// Device is enabled so we will generate a presence event and an enabled event
     	log.debug "${linkText} is enabled"
 	    def eventMap = [
         	name: "presence",
@@ -185,6 +192,9 @@ private handlePresenceEvent(present) {
     		]
     	log.debug "Creating presence event: ${device.displayName} ${eventMap.name} is ${eventMap.value}"
     	sendEvent(eventMap)
+        enabledStatus = "enabled-"
+        enabledStatus = enabledStatus.concat(present ? "present" : "not present")
+		sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
     }
 }
 
@@ -208,20 +218,27 @@ def checkPresenceCallback() {
 }
 
 def toggle() {
-	if (device.currentValue("enabled") == "enabled") {
-    	disable()        
-    } else {
+	// Button pressed, toggle the enabled state (which also tracks the current presence)
+	if ((device.currentValue("enabled") == "enabled-present") || (device.currentValue("enabled") == "enabled-not present"))
+    	disable()
+    else
     	enable()
-    }
 }
 
 def enable() {
+	// Enable the device and update the enabled status to reflect the new status
 	log.debug "Enabling ${getLinkText(device)}"
-	sendEvent(name: "enabled", value: "enabled", isStateChange: true)
+    if (device.currentValue("presence") == "present")
+		sendEvent(name: "enabled", value: "enabled-present", isStateChange: true)
+    else if (device.currentValue("presence") == "not present")
+		sendEvent(name: "enabled", value: "enabled-not present", isStateChange: true)  	
 }
 
 def disable() {
+	// Disable the device and update the enabled status to reflect the new status
 	log.debug "Disabling ${getLinkText(device)}"
-	sendEvent(name: "enabled", value: "disabled", isStateChange: true)
-	//sendEvent(name: "presence", value: "not present", isStateChange: true)
+    if (device.currentValue("presence") == "present")
+		sendEvent(name: "enabled", value: "disabled-present", isStateChange: true)
+    else if (device.currentValue("presence") == "not present")
+		sendEvent(name: "enabled", value: "disabled-not present", isStateChange: true)
 }
