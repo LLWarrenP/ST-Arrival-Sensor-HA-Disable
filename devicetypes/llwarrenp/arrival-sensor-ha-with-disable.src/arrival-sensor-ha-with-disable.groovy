@@ -18,11 +18,12 @@ import groovy.json.JsonOutput
  */
  
 def dthVersion() {
-	return "1.0"
+	return "1.1"
 }
 
 /*
 * Change Log:
+* 2018-7-29  - (1.1) Improved tracking and added user options to force mode upon enable / disable
 * 2018-7-26  - (1.0) Initial release
 * 2018-7-24  - (0.1) Debug release
 */
@@ -57,6 +58,12 @@ metadata {
         section {
             input "checkInterval", "enum", title: "Presence timeout (minutes)", description: "Tap to set",
                     defaultValue:"2", options: ["2", "3", "5"], displayDuringSetup: false
+        }
+        section {
+            input "disabledMode", "enum", title: "When disabling sensor, set presence to:", description: "Tap to set",
+                    defaultValue:"auto", options: ["auto", "present", "not present"], displayDuringSetup: false
+            input "enabledMode", "enum", title: "When enabling sensor, set presence to:", description: "Tap to set",
+                    defaultValue:"auto", options: ["auto", "present", "not present"], displayDuringSetup: false
         }
     }
 
@@ -175,14 +182,13 @@ private handlePresenceEvent(present) {
     	descriptionText = "{{ linkText }} has left"
     if ((device.currentValue("enabled") == "disabled-present") || (device.currentValue("enabled") == "disabled-not present")) {
     	// Device is disabled so we won't generate a presence event but instead just track the status behind the scenes by generating an enabled event
-    	log.debug "${linkText} is disabled - not creating presence event"
+    	log.debug "${linkText} is ${device.currentValue("enabled")}: not creating presence event"
         enabledStatus = "disabled-"
         enabledStatus = enabledStatus.concat(present ? "present" : "not present")
-		sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
+		if (device.currentValue("enabled") != enabledStatus) sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
 	}
     else {
     	// Device is enabled so we will generate a presence event and an enabled event
-    	log.debug "${linkText} is enabled"
 	    def eventMap = [
         	name: "presence",
         	value: present ? "present" : "not present",
@@ -190,11 +196,11 @@ private handlePresenceEvent(present) {
         	descriptionText: descriptionText,
         	translatable: true
     		]
-    	log.debug "Creating presence event: ${device.displayName} ${eventMap.name} is ${eventMap.value}"
-    	sendEvent(eventMap)
         enabledStatus = "enabled-"
         enabledStatus = enabledStatus.concat(present ? "present" : "not present")
-		sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
+		if (device.currentValue("enabled") != enabledStatus) sendEvent(name: "enabled", value: enabledStatus, isStateChange: true)
+	   	log.debug "Creating presence event: ${device.displayName} ${eventMap.name} is ${eventMap.value} with status ${device.currentValue("enabled")}"
+    	sendEvent(eventMap)
     }
 }
 
@@ -226,17 +232,34 @@ def toggle() {
 }
 
 def enable() {
+    // Force presence per user settings
+    log.debug "Setting sensor presence to ${settings.enabledMode}"
+	if (settings.enabledMode && (settings.enabledMode != "auto")) {
+    	stopTimer()
+    	sendEvent(name: "presence", value: settings.enabledMode, translatable: true)
+        }
+    else if (settings.enabledMode && (settings.enabledMode == "auto"))
+	    startTimer()
 	// Enable the device and update the enabled status to reflect the new status
 	log.debug "Enabling ${getLinkText(device)}"
     if (device.currentValue("presence") == "present")
 		sendEvent(name: "enabled", value: "enabled-present", isStateChange: true)
     else if (device.currentValue("presence") == "not present")
-		sendEvent(name: "enabled", value: "enabled-not present", isStateChange: true)  	
+		sendEvent(name: "enabled", value: "enabled-not present", isStateChange: true)
 }
 
 def disable() {
+    // Force presence per user settings
+    log.debug "Setting sensor presence to ${settings.disabledMode}"
+	if (settings.disabledMode && (settings.disabledMode != "auto")) {
+    	stopTimer()
+    	sendEvent(name: "presence", value: settings.disabledMode, translatable: true)
+        }
+    else if (settings.disabledMode && (settings.disabledMode == "auto"))
+	    startTimer()
 	// Disable the device and update the enabled status to reflect the new status
 	log.debug "Disabling ${getLinkText(device)}"
+    state.updatePresence = false
     if (device.currentValue("presence") == "present")
 		sendEvent(name: "enabled", value: "disabled-present", isStateChange: true)
     else if (device.currentValue("presence") == "not present")
