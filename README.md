@@ -4,7 +4,7 @@ SmartThings Arrival Sensor HA (2016+) with added ability to disable sensor
 This Device Handler allows you to disable the sensor so that it will not initiate any events that would/could change state.
 Normally the device would be enabled but if the device is not in use it can be disabled.  For example, an occasional visitor
 that you give the sensor to while they are visiting but then just store the sensor while they are not visiting.  Other solutions
-besides this one require the use of a separate virtual presence or virtual switch device as opposed to this one which does not.  Enabling and disabling is accomplished via a tile that you press when viewing the device.
+typically require the use of a separate virtual presence or virtual switch device as opposed to this one which does not.  Enabling and disabling is accomplished via a tile that you press when viewing the device.
 
 This device handler replaces the SmartThings provided handler called "SmartThings Arrival Sensor HA".
 
