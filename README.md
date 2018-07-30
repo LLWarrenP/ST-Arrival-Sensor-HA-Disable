@@ -43,3 +43,13 @@ The Device Handler is installed as a custom device handler via the SmartThings I
 5. From the "Type" dropdown, change the device type to the newly installed device handler (typically at the bottom of the list)
 6. Click "Update" to update the device and start using the handler
 7. In the SmartThings mobile app, view the device's settings and click the enable/disable button as desired
+
+# Notes and Options
+
+For *disable*, the sensor will stop responding to event changes after it is disabled and for *enable* it generates events as normal.  There are also some options, available for both disable and enable, that you can set:
+
+**auto**: this is the normal mode where the hub tries to reach the sensor and marks it as present or not present based on that.  The behavior is that it will start looking as normal and will react as normal.
+**present**: Forces the sensor to appear as being present even though it may not be
+**not present**: Forces the sensor to appear as being not present even though it may not be
+
+A typical config might be to set the "not present" option for *disable* to allow a sensor to be ignored while it is not being used and "auto" for *enable* to allow it to resume its real time status and start to generate normal events.  Note that using "present" or "not present" will force a one-time mode change upon enable / disable.
